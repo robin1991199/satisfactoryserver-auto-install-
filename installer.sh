@@ -12,6 +12,9 @@ SATISFACTORY_APPID=1690800
 LOG_FILE="$INSTALL_DIR/satisfactory_install.log"
 START_SERVER_SCRIPT="$SATISFACTORY_SERVER_DIR/start_server.sh"
 
+# Default port
+PORT=7777  # Change this to your desired port
+
 # Function to update and upgrade the system
 update_system() {
     echo "Updating and upgrading the system..."
@@ -70,11 +73,11 @@ start_satisfactory_server() {
     echo "Starting the Satisfactory server..."
 
     if [ -f "$SATISFACTORY_SERVER_DIR/FactoryServer.sh" ]; then
-        # Run the server start script
+        # Run the server start script with the specified port
         {
             cd "$SATISFACTORY_SERVER_DIR"
-            ./FactoryServer.sh &  # Starts the server in the background
-            echo "Satisfactory server started."
+            ./FactoryServer.sh -log -port=$PORT &  # Starts the server in the background with the specified port
+            echo "Satisfactory server started on port $PORT."
         } &>> "$LOG_FILE"
     else
         echo "Server start script not found! Check installation. Log: $LOG_FILE"
@@ -89,4 +92,3 @@ create_directories
 install_or_update_satisfactory_server
 start_satisfactory_server
 echo "Setup script completed."
-
