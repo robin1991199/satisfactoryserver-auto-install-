@@ -1,5 +1,5 @@
 #!/bin/bash
-#start config place 
+# start config place 
 # Steam credentials
 STEAM_USERNAME="your_steam_username"  # Change if necessary
 STEAM_PASSWORD="your_steam_password"  # Change if necessary
@@ -16,7 +16,7 @@ START_SERVER_SCRIPT="$SATISFACTORY_SERVER_DIR/start_server.sh"
 MAX_PLAYER="4"
 PORT=7777  # Change this to your desired port
 
-#stop config place 
+# stop config place 
 
 
 
