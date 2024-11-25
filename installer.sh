@@ -27,6 +27,14 @@ log() {
 display_menu() {
     clear
     log "Displaying setup menu to the user."
+	clear 
+    echo ""
+	echo "    ____________    __      ____________     "
+    echo "    \_____     /   /_ \     \     _____/     "
+    echo "     \_____    \____/  \____/    _____/      "
+    echo "      \_____                    _____/       "
+    echo "         \___________  ___________/          "
+    echo "                   /____\                    "
     echo "##############################################"
     echo "#        Satisfactory Server Setup Menu      #"
     echo "##############################################"
@@ -81,8 +89,14 @@ display_menu() {
     printf "%-30s : %s\n" "Beacon Port" "[default: $BEACON_PORT]"
     read -p "Enter Beacon Port: " input_beacon_port
     BEACON_PORT="${input_beacon_port:-$BEACON_PORT}"
-
+	clear 
     echo ""
+	echo "    ____________    __      ____________     "
+    echo "    \_____     /   /_ \     \     _____/     "
+    echo "     \_____    \____/  \____/    _____/      "
+    echo "      \_____                    _____/       "
+    echo "         \___________  ___________/          "
+    echo "                   /____\                    "
     echo "##############################################"
     echo "#            Configuration Summary           #"
     echo "##############################################"
