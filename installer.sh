@@ -29,7 +29,7 @@ display_menu() {
     log "Displaying setup menu to the user."
 	clear 
     echo ""
-	echo "    ____________    __      ____________     "
+    echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
     echo "     \_____    \____/  \____/    _____/      "
     echo "      \_____                    _____/       "
@@ -91,7 +91,7 @@ display_menu() {
     BEACON_PORT="${input_beacon_port:-$BEACON_PORT}"
 	clear 
     echo ""
-	echo "    ____________    __      ____________     "
+    echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
     echo "     \_____    \____/  \____/    _____/      "
     echo "      \_____                    _____/       "
