@@ -17,7 +17,7 @@ GAME_PORT=7777  # Default game port
 QUERY_PORT=15777  # Default query port
 BEACON_PORT=15000  # Default beacon port
 SCRIPT_VERSION="1.0.0"  # Set your current script version
-GITHUB_REPO="https://raw.githubusercontent.com/robin1991199/satisfactoryserver-auto-install-/refs/heads/main/installer.sh"  # Replace with your GitHub username/repository
+GITHUB_REPO="robin1991199/satisfactoryserver-auto-install-"  # Correct GitHub repository name
 
 # Function to log messages
 log() {
@@ -32,16 +32,29 @@ check_script_update() {
     # Fetch the latest release version from the GitHub API
     latest_version=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | jq -r '.tag_name')
 
+    if [ -z "$latest_version" ]; then
+        log "Error: Failed to fetch latest version from GitHub. Please check your GITHUB_REPO setting."
+        exit 1
+    fi
+
     if [ "$latest_version" != "$SCRIPT_VERSION" ]; then
         log "An update is available! Latest version: $latest_version. Current version: $SCRIPT_VERSION."
         read -p "Do you want to update the script now? (y/n): " update_choice
         if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
             log "Updating the script to version $latest_version..."
             # Download the latest version of the script from GitHub
-            curl -sL "https://github.com/$GITHUB_REPO/raw/$latest_version/setup.sh" -o "$0"
-            chmod +x "$0"
-            log "Script updated successfully to version $latest_version."
-            exit 0  # Exit to run the updated script immediately
+            script_url="https://github.com/$GITHUB_REPO/raw/refs/heads/main/installer.sh"
+            
+            # Check if the URL returns a valid script
+            if curl -s --head "$script_url" | grep "200 OK" > /dev/null; then
+                curl -sL "$script_url" -o "$0"
+                chmod +x "$0"
+                log "Script updated successfully to version $latest_version."
+                exit 0  # Exit to run the updated script immediately
+            else
+                log "Error: Failed to fetch the latest script version from $script_url."
+                exit 1
+            fi
         fi
     else
         log "No updates available. Current version is up to date."
