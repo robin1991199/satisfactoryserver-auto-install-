@@ -18,6 +18,8 @@ GAME_PORT=7777
 QUERY_PORT=15777
 BEACON_PORT=15000
 GITHUB_RAW_URL="https://github.com/robin1991199/satisfactoryserver-auto-install-/raw/refs/heads/main/installer.sh"
+BACKUP_DIR="$HOME/.satisfactory_backups"
+SAVE_DIR="$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/526870/pfx/drive_c/users/steamuser/AppData/Local/FactoryGame"
 
 # Function to log messages
 log() {
@@ -109,7 +111,7 @@ install_steamcmd() {
 # Function to create installation directories
 create_directories() {
     log "Creating installation directories..."
-    mkdir -p "$SATISFACTORY_SERVER_DIR" "$INSTALL_DIR/logs"
+    mkdir -p "$SATISFACTORY_SERVER_DIR" "$INSTALL_DIR/logs" "$BACKUP_DIR"
 }
 
 # Function to install/update the Satisfactory server
@@ -124,6 +126,20 @@ configure_firewall() {
     sudo ufw allow $GAME_PORT/udp
     sudo ufw allow $QUERY_PORT/udp
     sudo ufw allow $BEACON_PORT/tcp
+}
+
+# Function to create a backup
+create_backup() {
+    log "Creating backup of the server and save files..."
+    TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+    BACKUP_FILE="$BACKUP_DIR/satisfactory_backup_$TIMESTAMP.zip"
+
+    if [ -d "$SATISFACTORY_SERVER_DIR" ] && [ -d "$SAVE_DIR" ]; then
+        zip -r "$BACKUP_FILE" "$SATISFACTORY_SERVER_DIR" "$SAVE_DIR" &>> "$LOG_FILE"
+        log "Backup created at $BACKUP_FILE."
+    else
+        log "Failed to create backup. One or more directories do not exist."
+    fi
 }
 
 # Function to start the server
@@ -148,6 +164,7 @@ install_steamcmd
 create_directories
 install_or_update_satisfactory_server
 configure_firewall
+create_backup
 start_satisfactory_server
 create_systemd_service
 
