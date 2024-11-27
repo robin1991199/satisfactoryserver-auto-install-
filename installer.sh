@@ -16,8 +16,6 @@ MAX_PLAYER="4"
 GAME_PORT=7777  # Default game port
 QUERY_PORT=15777  # Default query port
 BEACON_PORT=15000  # Default beacon port
-SCRIPT_VERSION="1.0.0"  # Set your current script version
-GITHUB_REPO="https://raw.githubusercontent.com/robin1991199/satisfactoryserver-auto-install-/refs/heads/main/installer.sh"  # Replace with your GitHub username/repository
 
 # Function to log messages
 log() {
@@ -29,7 +27,7 @@ log() {
 display_menu() {
     clear
     log "Displaying setup menu to the user."
-    clear 
+	clear 
     echo ""
     echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
@@ -91,7 +89,7 @@ display_menu() {
     printf "%-30s : %s\n" "Beacon Port" "[default: $BEACON_PORT]"
     read -p "Enter Beacon Port: " input_beacon_port
     BEACON_PORT="${input_beacon_port:-$BEACON_PORT}"
-    clear 
+	clear 
     echo ""
     echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
@@ -170,41 +168,55 @@ set_maxplayer_count() {
         echo "[/Script/Engine.GameSession]" > "$GAME_INI"
         echo "MaxPlayers=$MAX_PLAYER" >> "$GAME_INI"
     else
-        log "Updating Game.ini file."
-        sed -i "s/^MaxPlayers=.*/MaxPlayers=$MAX_PLAYER/" "$GAME_INI"
+        if grep -q "MaxPlayers=" "$GAME_INI"; then
+            sed -i "s/MaxPlayers=.*/MaxPlayers=$MAX_PLAYER/" "$GAME_INI"
+        else
+            echo "[/Script/Engine.GameSession]" >> "$GAME_INI"
+            echo "MaxPlayers=$MAX_PLAYER" >> "$GAME_INI"
+        fi
     fi
-    log "Maximum player count set to $MAX_PLAYER."
+    log "Maximum player count set successfully."
 }
 
-# Function to start the server
-start_server() {
-    log "Starting Satisfactory server..."
-    chmod +x "$START_SERVER_SCRIPT"
-    "$START_SERVER_SCRIPT" &>> "$LOG_FILE"
-    log "Satisfactory server started."
+# Function to configure firewall rules
+configure_firewall() {
+    log "Configuring firewall rules with ufw..."
+    sudo ufw allow $GAME_PORT/udp || { log "Failed to allow UDP game port $GAME_PORT."; }
+    sudo ufw allow $QUERY_PORT/udp || { log "Failed to allow UDP query port $QUERY_PORT."; }
+    sudo ufw allow $BEACON_PORT/tcp || { log "Failed to allow TCP beacon port $BEACON_PORT."; }
+    log "Firewall rules configured successfully."
 }
 
-# Main execution
+# Function to start the Satisfactory server
+start_satisfactory_server() {
+    log "Starting the Satisfactory server..."
 
-# Optionally display a menu
-if [ "$SKIP_MENU" == "no" ]; then
+    if [ -f "$SATISFACTORY_SERVER_DIR/FactoryServer.sh" ]; then
+        {
+            cd "$SATISFACTORY_SERVER_DIR"
+            nohup ./FactoryServer.sh -log -Port=$GAME_PORT -QueryPort=$QUERY_PORT -BeaconPort=$BEACON_PORT > "$INSTALL_DIR/logs/server_output.log" 2>&1 &
+            log "Satisfactory server started with ports: Game=$GAME_PORT, Query=$QUERY_PORT, Beacon=$BEACON_PORT."
+        } &>> "$LOG_FILE"
+    else
+        log "Server start script not found! Check installation."
+    fi
+}
+
+# Main script execution
+log "Script execution started."
+
+if [[ "$SKIP_MENU" == "no" ]]; then
     display_menu
+else
+    log "Menu skipped. Using default configuration: Steam Username=$STEAM_USERNAME, Directory=$INSTALL_DIR, Max Players=$MAX_PLAYER, Ports=($GAME_PORT, $QUERY_PORT, $BEACON_PORT)."
 fi
 
-# Update the system
 update_system
-
-# Install SteamCMD
 install_steamcmd
-
-# Create necessary directories
 create_directories
-
-# Install or update the Satisfactory server
 install_or_update_satisfactory_server
-
-# Set the maximum player count
 set_maxplayer_count
+configure_firewall
+start_satisfactory_server
 
-# Start the server
-start_server
+log "Satisfactory server setup completed."
