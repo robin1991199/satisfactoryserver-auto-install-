@@ -39,7 +39,6 @@ update_script() {
         exit 0
     else
         log "Failed to download the latest version."
-        exit 1
     fi
 }
 
