@@ -18,7 +18,7 @@ QUERY_PORT=15777  # Default query port
 BEACON_PORT=15000  # Default beacon port
 BACKUP_DIR="$INSTALL_DIR/backups"
 SCRIPT_VERSION="1.0.0"  # Current version of the script
-GITHUB_REPO="your_github_username/your_repository"  # Replace with your actual GitHub repo
+GITHUB_REPO="https://github.com/robin1991199/satisfactoryserver-auto-install-/raw/refs/heads/main/installer.sh
 
 # Function to log messages
 log() {
