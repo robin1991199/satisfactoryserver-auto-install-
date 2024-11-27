@@ -17,7 +17,7 @@ GAME_PORT=7777  # Default game port
 QUERY_PORT=15777  # Default query port
 BEACON_PORT=15000  # Default beacon port
 SCRIPT_VERSION="1.0.0"  # Set your current script version
-GITHUB_REPO="your_github_username/your_repo"  # Replace with your GitHub username/repository
+GITHUB_REPO="https://raw.githubusercontent.com/robin1991199/satisfactoryserver-auto-install-/refs/heads/main/installer.sh"  # Replace with your GitHub username/repository
 
 # Function to log messages
 log() {
