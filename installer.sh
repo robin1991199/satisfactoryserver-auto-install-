@@ -16,9 +16,8 @@ MAX_PLAYER="4"
 GAME_PORT=7777  # Default game port
 QUERY_PORT=15777  # Default query port
 BEACON_PORT=15000  # Default beacon port
-BACKUP_DIR="$INSTALL_DIR/backups"
-SCRIPT_VERSION="0.0.0.1"  # Current version of the script
-GITHUB_REPO="https://github.com/robin1991199/satisfactoryserver-auto-install-/raw/refs/heads/main/installer.sh
+SCRIPT_VERSION="1.0.0"  # Set your current script version
+GITHUB_REPO="your_github_username/your_repo"  # Replace with your GitHub username/repository
 
 # Function to log messages
 log() {
@@ -26,24 +25,7 @@ log() {
     echo "$(date +'%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
 }
 
-# Function to create a full backup of the server files
-create_backup() {
-    local backup_name="backup_$(date +'%Y%m%d%H%M%S').tar.gz"
-    log "Creating full backup of the server files..."
-
-    # Create the backups directory if it doesn't exist
-    mkdir -p "$BACKUP_DIR"
-    
-    # Archive the server directory
-    tar -czf "$BACKUP_DIR/$backup_name" -C "$INSTALL_DIR" satisfactory_server || {
-        log "Failed to create backup."
-        return 1
-    }
-
-    log "Backup created successfully: $BACKUP_DIR/$backup_name"
-}
-
-# Function to check if the script has an update
+# Function to check for script updates
 check_script_update() {
     log "Checking for script updates..."
 
@@ -70,7 +52,7 @@ check_script_update() {
 display_menu() {
     clear
     log "Displaying setup menu to the user."
-    clear
+    clear 
     echo ""
     echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
@@ -132,7 +114,7 @@ display_menu() {
     printf "%-30s : %s\n" "Beacon Port" "[default: $BEACON_PORT]"
     read -p "Enter Beacon Port: " input_beacon_port
     BEACON_PORT="${input_beacon_port:-$BEACON_PORT}"
-    clear
+    clear 
     echo ""
     echo "    ____________    __      ____________     "
     echo "    \_____     /   /_ \     \     _____/     "
@@ -172,83 +154,83 @@ install_steamcmd() {
     log "SteamCMD installed successfully."
 }
 
-# Function to create necessary directories
+# Function to create the installation directory
 create_directories() {
-    log "Creating necessary directories..."
-    mkdir -p "$INSTALL_DIR"
+    log "Creating installation directories..."
     mkdir -p "$SATISFACTORY_SERVER_DIR"
-    mkdir -p "$LOG_FILE"
-    log "Directories created successfully."
+    mkdir -p "$INSTALL_DIR/logs"
+    log "Directories created at $INSTALL_DIR."
 }
 
 # Function to install or update the Satisfactory server
 install_or_update_satisfactory_server() {
     log "Installing or updating Satisfactory server..."
-    if [ ! -d "$SATISFACTORY_SERVER_DIR" ]; then
-        steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" +force_install_dir "$SATISFACTORY_SERVER_DIR" +app_update $SATISFACTORY_APPID validate +quit
-        log "Satisfactory server installed."
+    LOGIN_COMMAND="+login anonymous"
+    if [[ "$STEAM_USERNAME" != "your_steam_username" && "$STEAM_PASSWORD" != "your_steam_password" ]]; then
+        LOGIN_COMMAND="+login $STEAM_USERNAME $STEAM_PASSWORD"
+    fi
+
+    {
+        echo "Running SteamCMD..."
+        /usr/games/steamcmd +force_install_dir "$SATISFACTORY_SERVER_DIR" $LOGIN_COMMAND +app_update $SATISFACTORY_APPID validate +quit
+    } &>> "$LOG_FILE"
+
+    if [ $? -eq 0 ]; then
+        log "Satisfactory server installation/update complete."
     else
-        steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" +force_install_dir "$SATISFACTORY_SERVER_DIR" +app_update $SATISFACTORY_APPID validate +quit
-        log "Satisfactory server updated."
+        log "Failed to install/update Satisfactory server. Check the log for details."
     fi
 }
 
 # Function to set the maximum player count
 set_maxplayer_count() {
-    log "Setting maximum player count..."
     GAME_INI="$SATISFACTORY_SERVER_DIR/FactoryGame/Saved/Config/LinuxServer/Game.ini"
-    
-    if [ -f "$GAME_INI" ]; then
-        grep -q "MaxPlayers" "$GAME_INI" || {
-            echo "[SystemSettings]" >> "$GAME_INI"
-            echo "MaxPlayers=$MAX_PLAYER" >> "$GAME_INI"
-        }
-    fi
-    log "Maximum player count set successfully."
-}
 
-# Function to configure firewall rules
-configure_firewall() {
-    log "Configuring firewall rules with ufw..."
-    sudo ufw allow $GAME_PORT/udp || { log "Failed to allow UDP game port $GAME_PORT."; }
-    sudo ufw allow $QUERY_PORT/udp || { log "Failed to allow UDP query port $QUERY_PORT."; }
-    sudo ufw allow $BEACON_PORT/tcp || { log "Failed to allow TCP beacon port $BEACON_PORT."; }
-    log "Firewall rules configured successfully."
-}
-
-# Function to start the Satisfactory server
-start_satisfactory_server() {
-    log "Starting the Satisfactory server..."
-    
-    if [ -f "$SATISFACTORY_SERVER_DIR/FactoryServer.sh" ]; then
-        {
-            cd "$SATISFACTORY_SERVER_DIR"
-            nohup ./FactoryServer.sh -log -Port=$GAME_PORT -QueryPort=$QUERY_PORT -BeaconPort=$BEACON_PORT > "$INSTALL_DIR/logs/server_output.log" 2>&1 &
-            log "Satisfactory server started with ports: Game=$GAME_PORT, Query=$QUERY_PORT, Beacon=$BEACON_PORT."
-        } &>> "$LOG_FILE"
+    log "Setting maximum player count to $MAX_PLAYER..."
+    if [ ! -f "$GAME_INI" ]; then
+        log "Creating Game.ini file."
+        mkdir -p "$(dirname "$GAME_INI")"
+        echo "[/Script/Engine.GameSession]" > "$GAME_INI"
+        echo "MaxPlayers=$MAX_PLAYER" >> "$GAME_INI"
     else
-        log "Server start script not found! Check installation."
+        log "Updating Game.ini file."
+        sed -i "s/^MaxPlayers=.*/MaxPlayers=$MAX_PLAYER/" "$GAME_INI"
     fi
+    log "Maximum player count set to $MAX_PLAYER."
 }
 
-# Main script execution
-log "Script execution started."
+# Function to start the server
+start_server() {
+    log "Starting Satisfactory server..."
+    chmod +x "$START_SERVER_SCRIPT"
+    "$START_SERVER_SCRIPT" &>> "$LOG_FILE"
+    log "Satisfactory server started."
+}
 
-# Check for script update
+# Main execution
+
+# Check for script updates first
 check_script_update
 
-if [[ "$SKIP_MENU" == "no" ]]; then
+# Optionally display a menu
+if [ "$SKIP_MENU" == "no" ]; then
     display_menu
-else
-    log "Menu skipped. Using default configuration: Steam Username=$STEAM_USERNAME, Directory=$INSTALL_DIR, Max Players=$MAX_PLAYER, Ports=($GAME_PORT, $QUERY_PORT, $BEACON_PORT)."
 fi
 
+# Update the system
 update_system
-install_steamcmd
-create_directories
-install_or_update_satisfactory_server
-set_maxplayer_count
-configure_firewall
-start_satisfactory_server
 
-log "Satisfactory server setup completed."
+# Install SteamCMD
+install_steamcmd
+
+# Create necessary directories
+create_directories
+
+# Install or update the Satisfactory server
+install_or_update_satisfactory_server
+
+# Set the maximum player count
+set_maxplayer_count
+
+# Start the server
+start_server
