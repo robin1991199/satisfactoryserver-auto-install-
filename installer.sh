@@ -25,31 +25,6 @@ log() {
     echo "$(date +'%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
 }
 
-# Function to check for script updates
-check_script_update() {
-    log "Checking for script updates..."
-
-    # Fetch the latest release version from the GitHub API
-    latest_version=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/releases/latest" | jq -r '.tag_name')
-
-    if [ "$latest_version" != "$SCRIPT_VERSION" ]; then
-        log "An update is available! Latest version: $latest_version. Current version: $SCRIPT_VERSION."
-        read -p "Do you want to update the script now? (y/n): " update_choice
-        if [[ "$update_choice" == "y" || "$update_choice" == "Y" ]]; then
-            log "Updating the script to version $latest_version..."
-            # Download the latest version of the script from GitHub
-            curl -sL "https://github.com/$GITHUB_REPO/raw/$latest_version/installer.sh" -o "$0"
-            chmod +x "$0"
-            log "Script updated successfully to version $latest_version."
-            exec "$0"  # This restarts the script after the update.
-        else
-            log "Update skipped by the user."
-        fi
-    else
-        log "No updates available. Current version is up to date."
-    fi
-}
-
 # Function to display the menu and get user input
 display_menu() {
     clear
@@ -139,6 +114,76 @@ display_menu() {
     read -p "Press Enter to confirm and continue..."
 }
 
+# Function to update and upgrade the system
+update_system() {
+    log "Updating and upgrading the system..."
+    sudo apt-get update && sudo apt-get upgrade -y || log "System update failed."
+    log "System update and upgrade complete."
+}
+
+# Function to install SteamCMD
+install_steamcmd() {
+    log "Installing SteamCMD..."
+    sudo add-apt-repository multiverse -y || { log "Failed to add multiverse repository."; exit 1; }
+    sudo dpkg --add-architecture i386
+    sudo apt-get update || { log "Failed to update package lists."; exit 1; }
+    sudo apt-get install steamcmd -y || { log "Failed to install SteamCMD."; exit 1; }
+    log "SteamCMD installed successfully."
+}
+
+# Function to create the installation directory
+create_directories() {
+    log "Creating installation directories..."
+    mkdir -p "$SATISFACTORY_SERVER_DIR"
+    mkdir -p "$INSTALL_DIR/logs"
+    log "Directories created at $INSTALL_DIR."
+}
+
+# Function to install or update the Satisfactory server
+install_or_update_satisfactory_server() {
+    log "Installing or updating Satisfactory server..."
+    LOGIN_COMMAND="+login anonymous"
+    if [[ "$STEAM_USERNAME" != "your_steam_username" && "$STEAM_PASSWORD" != "your_steam_password" ]]; then
+        LOGIN_COMMAND="+login $STEAM_USERNAME $STEAM_PASSWORD"
+    fi
+
+    {
+        echo "Running SteamCMD..."
+        /usr/games/steamcmd +force_install_dir "$SATISFACTORY_SERVER_DIR" $LOGIN_COMMAND +app_update $SATISFACTORY_APPID validate +quit
+    } &>> "$LOG_FILE"
+
+    if [ $? -eq 0 ]; then
+        log "Satisfactory server installation/update complete."
+    else
+        log "Failed to install/update Satisfactory server. Check the log for details."
+    fi
+}
+
+# Function to set the maximum player count
+set_maxplayer_count() {
+    GAME_INI="$SATISFACTORY_SERVER_DIR/FactoryGame/Saved/Config/LinuxServer/Game.ini"
+
+    log "Setting maximum player count to $MAX_PLAYER..."
+    if [ ! -f "$GAME_INI" ]; then
+        log "Creating Game.ini file."
+        mkdir -p "$(dirname "$GAME_INI")"
+        echo "[/Script/Engine.GameSession]" > "$GAME_INI"
+        echo "MaxPlayers=$MAX_PLAYER" >> "$GAME_INI"
+    else
+        log "Updating Game.ini file."
+        sed -i "s/^MaxPlayers=.*/MaxPlayers=$MAX_PLAYER/" "$GAME_INI"
+    fi
+    log "Maximum player count set to $MAX_PLAYER."
+}
+
+# Function to start the server
+start_server() {
+    log "Starting Satisfactory server..."
+    chmod +x "$START_SERVER_SCRIPT"
+    "$START_SERVER_SCRIPT" &>> "$LOG_FILE"
+    log "Satisfactory server started."
+}
+
 # Main execution
 
 # Optionally display a menu
@@ -146,13 +191,20 @@ if [ "$SKIP_MENU" == "no" ]; then
     display_menu
 fi
 
-# Check for script update based on user input
-check_script_update
-
-# Proceed with the installation if not skipped
+# Update the system
 update_system
+
+# Install SteamCMD
 install_steamcmd
+
+# Create necessary directories
 create_directories
+
+# Install or update the Satisfactory server
 install_or_update_satisfactory_server
+
+# Set the maximum player count
 set_maxplayer_count
+
+# Start the server
 start_server
