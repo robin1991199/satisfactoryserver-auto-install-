@@ -34,11 +34,10 @@ update_script() {
     if curl -fsSL "$GITHUB_RAW_URL" -o "$TEMP_SCRIPT"; then
         log "Latest version downloaded successfully."
         cp "$0" "${0}.bak" || { log "Failed to create a backup."; exit 1; }
-        mv "$TEMP_SCRIPT" "$0" && chmod +x "$0"
-        log "Script updated successfully. Exiting..."
-        exit 0
+        mv "$TEMP_SCRIPT" "$0" && chmod +x "$0" && log "Script updated. Restarting..." && exec "$0" "$@"
     else
         log "Failed to download the latest version."
+
     fi
 }
 
