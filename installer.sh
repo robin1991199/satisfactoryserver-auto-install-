@@ -112,9 +112,9 @@ install_steamcmd() {
             sudo apt-add-repository non-free
             sudo dpkg --add-architecture i386
             sudo apt update
-			sudo apt install zip
-			sudo apt install ufw
-			sudo ufw enable 
+	    sudo apt install -y zip
+	    sudo apt install -y ufw
+	    sudo ufw enable 
             sudo apt install -y steamcmd
         elif [[ -f /etc/ubuntu_version ]]; then
             # For Ubuntu
@@ -123,9 +123,9 @@ install_steamcmd() {
             sudo dpkg --add-architecture i386
             sudo apt update
             sudo apt install -y steamcmd
-			sudo apt install zip
-			sudo apt install ufw
-			sudo ufw enable
+	    sudo apt install -y zip
+	    sudo apt install -y ufw
+	    sudo ufw enable
         elif [[ -f /etc/fedora-release ]]; then
             # For Fedora
             log "Detected Fedora OS. Installing SteamCMD..."
@@ -212,6 +212,8 @@ configure_firewall() {
     sudo ufw allow $GAME_PORT/udp || { log "Failed to allow UDP game port $GAME_PORT."; }
     sudo ufw allow $QUERY_PORT/udp || { log "Failed to allow UDP query port $QUERY_PORT."; }
     sudo ufw allow $BEACON_PORT/tcp || { log "Failed to allow TCP beacon port $BEACON_PORT."; }
+    sudo ufw allow ssh
+    
     log "Firewall rules configured successfully."
 }
 
