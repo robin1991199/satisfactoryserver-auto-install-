@@ -112,9 +112,10 @@ install_steamcmd() {
             sudo apt-add-repository non-free
             sudo dpkg --add-architecture i386
             sudo apt update
+	    sudo apt upgrade
 	    sudo apt install -y zip
-	    sudo apt install -y ufw
-	    sudo ufw enable 
+	    #sudo apt install -y ufw
+	    #sudo ufw enable 
             sudo apt install -y steamcmd
         elif [[ -f /etc/ubuntu_version ]]; then
             # For Ubuntu
@@ -122,10 +123,11 @@ install_steamcmd() {
             sudo add-apt-repository multiverse
             sudo dpkg --add-architecture i386
             sudo apt update
+	    sudo apt upgrade
             sudo apt install -y steamcmd
 	    sudo apt install -y zip
-	    sudo apt install -y ufw
-	    sudo ufw enable
+	    #sudo apt install -y ufw
+	    #sudo ufw enable
         elif [[ -f /etc/fedora-release ]]; then
             # For Fedora
             log "Detected Fedora OS. Installing SteamCMD..."
@@ -253,7 +255,7 @@ create_directories
 backup_server
 install_or_update_satisfactory_server
 set_maxplayer_count
-configure_firewall
+#configure_firewall
 start_satisfactory_server
 
 log "Satisfactory server setup completed."
